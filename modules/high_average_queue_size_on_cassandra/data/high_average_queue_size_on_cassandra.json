@@ -1,0 +1,134 @@
+{
+  "name": "high_average_queue_size_on_cassandra",
+  "description": "This incident type refers to a situation where the average queue size on a Cassandra database exceeds a certain threshold. A queue is a data structure that holds incoming requests until they can be processed. When the average queue size is too high, it can indicate that the database is struggling to keep up with incoming requests, which can result in slower response times and potential service disruptions. This type of incident requires investigation and resolution to ensure the database can handle the incoming workload efficiently.",
+  "params": [
+    {
+      "name": "NETSTAT_PARAMETERS",
+      "value": ""
+    },
+    {
+      "name": "NUMBER_OF_NODES",
+      "value": ""
+    },
+    {
+      "name": "STATUS",
+      "value": ""
+    },
+    {
+      "name": "CASSANDRA_PORT",
+      "value": ""
+    },
+    {
+      "name": "NODETOOL_PARAMETERS",
+      "value": ""
+    },
+    {
+      "name": "PATH_TO_CASSANDRA_CONFIG_FILE",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## High Average Queue Size on Cassandra\nThis incident type refers to a situation where the average queue size on a Cassandra database exceeds a certain threshold. A queue is a data structure that holds incoming requests until they can be processed. When the average queue size is too high, it can indicate that the database is struggling to keep up with incoming requests, which can result in slower response times and potential service disruptions. This type of incident requires investigation and resolution to ensure the database can handle the incoming workload efficiently."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the current queue size"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `nodetool -- ${NODETOOL_PARAMETERS} tpstats | grep -A1 \"ReadStage\" | tail -n1`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the number of requests per second"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `nodetool -- ${NODETOOL_PARAMETERS} tpstats | grep -A1 \"ReadStage\" | tail -n1 | awk '{print $2}'`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the number of active connections"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `netstat -- ${NETSTAT_PARAMETERS} | grep \"${CASSANDRA_PORT}\" | wc -l`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the number of pending connections"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `netstat -- ${NETSTAT_PARAMETERS} | grep \"${CASSANDRA_PORT}\" | grep \"${STATUS}\" | wc -l`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the system load average"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `uptime`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the disk usage"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `df -h`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Increase the number of nodes in the Cassandra cluster to distribute the workload and reduce the load on individual nodes."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_update_cassandra_config($NUMBER_OF_NODES, $PATH_TO_CASSANDRA_CONFIG_FILE)"
+    }
+  ]
+}
